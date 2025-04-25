@@ -1,5 +1,3 @@
-// src/app/anime/[id]/page.tsx
-
 import Link from "next/link";
 import { hianime } from "@/lib/aniwatch";
 
@@ -9,11 +7,15 @@ interface Episode {
   // We no longer expect `slug` and `ep` directly; we'll parse them from `episodeId`.
 }
 
-export default async function AnimePage({ params }: { params: { id: string } }) {
-  // Await the params to meet Next.js requirements.
-  const { id } = await Promise.resolve(params);
+export default async function AnimePage({
+  params,
+}: {
+  params: { id: string };
+}): Promise<JSX.Element> {
+  // Directly destructure the params without awaiting.
+  const { id } = params;
 
-  // Fetch the episodes using the awaited id.
+  // Fetch the episodes for the given anime id.
   const json = await hianime.getEpisodes(id);
   const eps: Episode[] = json.episodes;
 
@@ -22,7 +24,7 @@ export default async function AnimePage({ params }: { params: { id: string } }) 
       <h1 className="text-3xl mb-4">{id.replace(/-/g, " ")}</h1>
       <ul className="list-disc pl-5 space-y-2">
         {eps.map((e) => {
-          // Default values
+          // Default values.
           let slug = e.episodeId;
           let ep = "";
 
@@ -36,10 +38,8 @@ export default async function AnimePage({ params }: { params: { id: string } }) 
 
           return (
             <li key={e.episodeId}>
-              {/* This builds a URL like: /watch/one-piece-100?ep=2142 */}
-              <Link href={`/watch/${slug}?ep=${ep}`}>
-                Episode {e.number}
-              </Link>
+              {/* Builds a URL like: /watch/one-piece-100?ep=2142 */}
+              <Link href={`/watch/${slug}?ep=${ep}`}>Episode {e.number}</Link>
             </li>
           );
         })}
