@@ -1,11 +1,11 @@
 // File: src/pages/api/proxy.ts
-
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createProxyMiddleware } from "http-proxy-middleware";
 
 export const config = {
   api: {
-    externalResolver: true, // avoid warning about external middleware
+    externalResolver: true,  // disables “unresolved handler” warnings :contentReference[oaicite:1]{index=1}
+    bodyParser: false,       // allow raw request stream for proxy middleware :contentReference[oaicite:2]{index=2}
   },
 };
 
