@@ -1,14 +1,19 @@
 "use client";
+
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 
-export default function SearchPage() {
+interface Anime {
+  id: string;
+  name: string;
+  poster: string;
+}
+
+function SearchResults() {
   const searchParams = useSearchParams();
   const searchPhrase = searchParams.get("q") || "";
-  const [animes, setAnimes] = useState<
-    { id: string; name: string; poster: string }[]
-  >([]);
+  const [animes, setAnimes] = useState<Anime[]>([]);
 
   useEffect(() => {
     if (!searchPhrase) return;
@@ -21,8 +26,8 @@ export default function SearchPage() {
           throw new Error("API request failed");
         }
         const data = await res.json();
-        // Assuming your API returns an object with `animes`
-        setAnimes(data.animes);
+        // Casting the fetched data to ensure it matches the Anime type
+        setAnimes(data.animes as Anime[]);
       } catch (error) {
         console.error("Search error:", error);
       }
@@ -42,6 +47,8 @@ export default function SearchPage() {
             <img
               src={a.poster}
               alt={a.name}
+              width={300}
+              height={400}
               className="w-full h-40 object-cover"
             />
             <p className="p-2 text-center">{a.name}</p>
@@ -49,5 +56,13 @@ export default function SearchPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div>Loading search results...</div>}>
+      <SearchResults />
+    </Suspense>
   );
 }
