@@ -16,7 +16,7 @@ export default async function WatchPage({
   const fullEpisodeId = ep ? `${episodeId}?ep=${ep}` : episodeId;
   
   // Get the original source URL from your scraper using the full identifier.
-  const json = await hianime.getEpisodeSources(fullEpisodeId,'hd-1');
+  const json = await hianime.getEpisodeSources(fullEpisodeId,'hd-2');
   const originalSourceUrl = json.sources?.[0]?.url || "";
 
   if (!originalSourceUrl) {

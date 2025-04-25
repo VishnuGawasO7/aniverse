@@ -13,7 +13,7 @@ const proxy = createProxyMiddleware({
 // The default handler for the API route
 export default function handler(req: NextApiRequest, res: NextApiResponse): Promise<void> {
   return new Promise((resolve, reject) => {
-    proxy(req, res, (result: any) => {
+    proxy(req, res, (result: unknown) => {
       if (result instanceof Error) {
         console.error('Proxy error:', result);
         res.status(500).json({ error: 'Proxy failed' });

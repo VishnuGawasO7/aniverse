@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Hls, { ErrorData, Events } from "hls.js";
 
 interface PlayerProps {
@@ -12,52 +12,52 @@ interface PlayerProps {
 export default function Player({ src, poster, className = "" }: PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  
-  // Decode any encoded URL.
-  src = decodeURIComponent(src);
-  
+
+  // Instead of mutating the prop, we decode the source URL and memoize it.
+  const decodedSrc = useMemo(() => decodeURIComponent(src), [src]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Quality control state:
   const [levels, setLevels] = useState<Hls.Level[]>([]);
   // currentLevel === -1 implies auto quality.
-  const [currentLevel, setCurrentLevel] = useState<number>(-1); 
+  const [currentLevel, setCurrentLevel] = useState<number>(-1);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    
-    // Clean up any previous Hls instance.
+
+    // If there's an existing HLS instance, destroy it before creating a new one.
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     if (Hls.isSupported()) {
       const hls = new Hls();
       hlsRef.current = hls;
       hls.attachMedia(video);
-      
+
       hls.on(Events.MEDIA_ATTACHED, () => {
-        hls.loadSource(src);
+        hls.loadSource(decodedSrc);
       });
-      
+
       hls.on(Events.MANIFEST_PARSED, () => {
         setIsLoading(false);
         // Save quality level options from the parsed manifest.
         setLevels(hls.levels);
         setCurrentLevel(hls.currentLevel); // -1 means auto quality.
       });
-      
+
       // Update the UI when the quality level changes.
-      hls.on(Events.LEVEL_SWITCHED, (_, data) => {
+      hls.on(Events.LEVEL_SWITCHED, () => {
         setCurrentLevel(hls.currentLevel);
       });
-      
+
       hls.on(Events.ERROR, (_event, data: ErrorData) => {
         console.error("HLS.js error:", data);
         setError(data.details || "An unknown HLS error occurred");
@@ -65,7 +65,7 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari / iOS fallback.
-      video.src = src;
+      video.src = decodedSrc;
       video.addEventListener("loadedmetadata", () => {
         setIsLoading(false);
       });
@@ -77,15 +77,15 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
       setError("HLS is not supported in this browser");
       setIsLoading(false);
     }
-    
+
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
-  }, [src]);
-  
+  }, [decodedSrc]);
+
   // Handler for quality selection.
   const onQualityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLevel = parseInt(e.target.value, 10);
@@ -94,7 +94,7 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
       hlsRef.current.currentLevel = newLevel; // -1 stands for auto.
     }
   };
-  
+
   return (
     <div className={`relative ${className}`}>
       {poster && (
@@ -104,19 +104,19 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
           className="absolute inset-0 w-full h-full object-cover blur-md"
         />
       )}
-  
+
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white">
           Loading video…
         </div>
       )}
-  
+
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-red-600 bg-opacity-75 text-white p-4">
           <p>Error: {error}</p>
         </div>
       )}
-  
+
       <video
         ref={videoRef}
         controls
@@ -124,7 +124,7 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
         playsInline
         className="w-full rounded-lg shadow-lg relative"
       />
-  
+
       {/* Quality Dropdown */}
       {levels.length > 0 && (
         <div className="absolute top-2 right-2 bg-black bg-opacity-75 p-2 rounded">
