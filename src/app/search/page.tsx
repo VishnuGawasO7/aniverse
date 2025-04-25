@@ -1,7 +1,9 @@
 "use client";
+
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -17,11 +19,8 @@ export default function SearchPage() {
         const res = await fetch(
           `/api/search?q=${encodeURIComponent(searchPhrase)}&page=1`
         );
-        if (!res.ok) {
-          throw new Error("API request failed");
-        }
+        if (!res.ok) throw new Error("API request failed");
         const data = await res.json();
-        // Assuming your API returns an object with `animes`
         setAnimes(data.animes);
       } catch (error) {
         console.error("Search error:", error);
@@ -39,11 +38,15 @@ export default function SearchPage() {
             href={`/anime/${a.id}`}
             className="block bg-gray-800 rounded overflow-hidden shadow"
           >
-            <img
-              src={a.poster}
-              alt={a.name}
-              className="w-full h-40 object-cover"
-            />
+            <div className="relative w-full h-40">
+              <Image
+                src={a.poster}
+                alt={a.name}
+                fill
+                className="object-cover"
+                unoptimized={false}
+              />
+            </div>
             <p className="p-2 text-center">{a.name}</p>
           </Link>
         ))}
