@@ -1,3 +1,4 @@
+// src/app/anime/[id]/page.tsx
 import Link from "next/link";
 import { hianime } from "@/lib/aniwatch";
 import { Metadata } from "next";
@@ -7,17 +8,18 @@ interface Episode {
   episodeId: string;
 }
 
+// In Next.js 15, `params` is now an async API and must be typed as a Promise
 interface AnimePageProps {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
-// Optional: SEO metadata
+// SEO metadata generator
 export async function generateMetadata({
   params,
 }: AnimePageProps): Promise<Metadata> {
-  const title = params.id.replace(/-/g, " ");
+  // await the params Promise
+  const { id } = await params;
+  const title = id.replace(/-/g, " ");
   return {
     title: `${title} - Episodes | Aniverse`,
   };
@@ -26,7 +28,8 @@ export async function generateMetadata({
 export default async function AnimePage({
   params,
 }: AnimePageProps): Promise<JSX.Element> {
-  const { id } = params;
+  // await the params Promise before destructuring
+  const { id } = await params;
 
   const json = await hianime.getEpisodes(id);
   const eps: Episode[] = json.episodes;
@@ -44,8 +47,8 @@ export default async function AnimePage({
           if (e.episodeId.includes("?")) {
             const [base, queryString] = e.episodeId.split("?");
             slug = base;
-            const params = new URLSearchParams(queryString);
-            ep = params.get("ep") || "";
+            const ps = new URLSearchParams(queryString);
+            ep = ps.get("ep") || "";
           }
 
           return (
