@@ -7,13 +7,15 @@ interface Episode {
   // We no longer expect `slug` and `ep` directly; we'll parse them from `episodeId`.
 }
 
-export default async function AnimePage({
-  params,
-}: {
+type AnimePageProps = {
   params: { id: string };
-}): Promise<JSX.Element> {
-  // Directly destructure the params without awaiting.
-  const { id } = params;
+};
+
+export default async function AnimePage(
+  props: AnimePageProps
+): Promise<JSX.Element> {
+  // Destructure the params inside the function body instead of the parameter list.
+  const { id } = props.params;
 
   // Fetch the episodes for the given anime id.
   const json = await hianime.getEpisodes(id);
@@ -38,8 +40,10 @@ export default async function AnimePage({
 
           return (
             <li key={e.episodeId}>
-              {/* Builds a URL like: /watch/one-piece-100?ep=2142 */}
-              <Link href={`/watch/${slug}?ep=${ep}`}>Episode {e.number}</Link>
+              {/* Build a URL like: /watch/one-piece-100?ep=2142 */}
+              <Link href={`/watch/${slug}?ep=${ep}`}>
+                Episode {e.number}
+              </Link>
             </li>
           );
         })}
