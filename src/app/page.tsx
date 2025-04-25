@@ -4,10 +4,10 @@ import SearchBar from "@/components/SearchBar";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4 sm:p-20">
+    <main className="min-h-screen bg-black-50 flex flex-col justify-center items-center p-4 sm:p-20">
       <header className="mb-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
-          Welcome to AniVerse - VishnuGawas07
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-100">
+          Welcome to AniVerse VishnuGawas07
         </h1>
         <p className="mt-2 text-lg text-gray-600">
           Find what you’re looking for quickly and easily.

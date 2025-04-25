@@ -1,25 +1,28 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+// File: src/pages/api/proxy.ts
 
-// Create and configure the proxy middleware
-const proxy = createProxyMiddleware({
-  target: 'https://hianimez.to', // Target site
-  changeOrigin: true,           // Modifies the origin header
-  pathRewrite: {
-    '^/api/proxy': '',          // Remove '/api/proxy' from the request URL before forwarding
+import type { NextApiRequest, NextApiResponse } from "next";
+import { createProxyMiddleware } from "http-proxy-middleware";
+
+export const config = {
+  api: {
+    externalResolver: true, // avoid warning about external middleware
   },
+};
+
+const proxy = createProxyMiddleware({
+  target: "https://hianimez.to",
+  changeOrigin: true,
+  pathRewrite: { "^/api/proxy": "" },
 });
 
-// The default handler for the API route
-export default function handler(req: NextApiRequest, res: NextApiResponse): Promise<void> {
-  return new Promise((resolve, reject) => {
-    proxy(req, res, (result: unknown) => {
-      if (result instanceof Error) {
-        console.error('Proxy error:', result);
-        res.status(500).json({ error: 'Proxy failed' });
-        return reject(result);
-      }
-      resolve();
-    });
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+): void {
+  return proxy(req, res, (err) => {
+    if (err) {
+      console.error("Proxy error:", err);
+      res.status(500).json({ error: "Proxy failed" });
+    }
   });
 }

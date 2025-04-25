@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
 
       // Build proxy URL prefix; here we force every outgoing URL to go through our proxy.
       // (For development it’s hardcoded to localhost; in production you might use request.nextUrl.origin.)
-      const hostProxyUrl =request.nextUrl.origin|| process.env.HOST_PROXY_URL||`http://localhost:3000/api/proxy?target=`;
-
+      const hostProxyUrl = process.env.HOST_PROXY_URL || `http://localhost:3000/api/proxy?target=`;
+// request.nextUrl.origin|| process.env.HOST_PROXY_URL||
       // Rewrite every line in the manifest.
       // For comment lines (which may include inline URI attributes) and standalone URLs,
       // always force the URL to be prefixed with our proxy.

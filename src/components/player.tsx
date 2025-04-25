@@ -2,28 +2,33 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Hls, { ErrorData, Events } from "hls.js";
-import Image from "next/image";
 
 interface PlayerProps {
-  src: string;
-  poster?: string;
-  className?: string;
+  src: string;       // URL of the .m3u8 (should be your proxy URL)
+  poster?: string;   // Optional poster image
+  className?: string; // Additional CSS classes, if desired
 }
 
 export default function Player({ src, poster, className = "" }: PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
+  // Instead of mutating the prop, we decode the source URL and memoize it.
   const decodedSrc = useMemo(() => decodeURIComponent(src), [src]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Quality control state:
   const [levels, setLevels] = useState<Hls.Level[]>([]);
+  // currentLevel === -1 implies auto quality.
   const [currentLevel, setCurrentLevel] = useState<number>(-1);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    // If there's an existing HLS instance, destroy it before creating a new one.
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -37,23 +42,33 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
       hlsRef.current = hls;
       hls.attachMedia(video);
 
-      hls.on(Events.MEDIA_ATTACHED, () => hls.loadSource(decodedSrc));
+      hls.on(Events.MEDIA_ATTACHED, () => {
+        hls.loadSource(decodedSrc);
+      });
+
       hls.on(Events.MANIFEST_PARSED, () => {
         setIsLoading(false);
+        // Save quality level options from the parsed manifest.
         setLevels(hls.levels);
+        setCurrentLevel(hls.currentLevel); // -1 means auto quality.
+      });
+
+      // Update the UI when the quality level changes.
+      hls.on(Events.LEVEL_SWITCHED, () => {
         setCurrentLevel(hls.currentLevel);
       });
-      hls.on(Events.LEVEL_SWITCHED, () =>
-        setCurrentLevel(hls.currentLevel)
-      );
-      hls.on(Events.ERROR, (_e, data: ErrorData) => {
+
+      hls.on(Events.ERROR, (_event, data: ErrorData) => {
         console.error("HLS.js error:", data);
         setError(data.details || "An unknown HLS error occurred");
         setIsLoading(false);
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Safari / iOS fallback.
       video.src = decodedSrc;
-      video.addEventListener("loadedmetadata", () => setIsLoading(false));
+      video.addEventListener("loadedmetadata", () => {
+        setIsLoading(false);
+      });
       video.addEventListener("error", () => {
         setError("Native HLS playback failed");
         setIsLoading(false);
@@ -71,23 +86,23 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
     };
   }, [decodedSrc]);
 
+  // Handler for quality selection.
   const onQualityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLevel = parseInt(e.target.value, 10);
     setCurrentLevel(newLevel);
-    if (hlsRef.current) hlsRef.current.currentLevel = newLevel;
+    if (hlsRef.current) {
+      hlsRef.current.currentLevel = newLevel; // -1 stands for auto.
+    }
   };
 
   return (
     <div className={`relative ${className}`}>
       {poster && (
-        <div className="absolute inset-0">
-          <Image
-            src={poster}
-            alt="video poster"
-            fill
-            className="object-cover blur-md"
-          />
-        </div>
+        <img
+          src={poster}
+          alt="video poster"
+          className="absolute inset-0 w-full h-full object-cover blur-md"
+        />
       )}
 
       {isLoading && (
@@ -110,6 +125,7 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
         className="w-full rounded-lg shadow-lg relative"
       />
 
+      {/* Quality Dropdown */}
       {levels.length > 0 && (
         <div className="absolute top-2 right-2 bg-black bg-opacity-75 p-2 rounded">
           <select
@@ -118,10 +134,10 @@ export default function Player({ src, poster, className = "" }: PlayerProps) {
             onChange={onQualityChange}
           >
             <option value={-1}>Auto</option>
-            {levels.map((level, idx) => {
-              const label = level.height ? `${level.height}p` : `Level ${idx}`;
+            {levels.map((level, index) => {
+              const label = level.height ? `${level.height}p` : `Level ${index}`;
               return (
-                <option key={idx} value={idx}>
+                <option key={index} value={index}>
                   {label}
                 </option>
               );
