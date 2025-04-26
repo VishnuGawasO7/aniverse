@@ -31,27 +31,29 @@ export default async function AnimePage({ params }: AnimePageProps) {
     .filter((e) => e.episodeId !== null)
     .map((e) => ({
       number: e.number,
-      episodeId: e.episodeId!,        // `!` safe because we just filtered nulls
+      episodeId: e.episodeId!, // `!` safe because we just filtered nulls
     })) as Episode[];
 
   return (
     <div className="p-4">
-      <h1 className="text-3xl font-bold text-white mb-4">
-        {id.replace(/-/g, " ")}
+      <h1 className="text-3xl font-bold text-white mb-4 w-full ">
+        {id.replace(/-/g, " ")} 
       </h1>
-      <ul className="list-disc pl-5 space-y-2 text-white">
+      <ul className="grid grid-cols-5 sm:grid-cols-10 w-full text-white ">
         {eps.map((e) => {
           const [slug, query] = e.episodeId.split("?");
           const ep = query ? new URLSearchParams(query).get("ep") || "" : "";
 
           return (
             <li key={e.episodeId}>
-              <Link
-                className="text-blue-400 hover:underline"
-                href={`/watch/${slug}?ep=${ep}`}
-              >
-                Episode {e.number}
-              </Link>
+              <div className="bg-blue-950 m-1 w-10 h-8 text-center">
+                <Link
+                  className="text-blue-400 hover:underline"
+                  href={`/watch/${slug}?ep=${ep}`}
+                >
+                  {e.number}
+                </Link>
+              </div>
             </li>
           );
         })}
